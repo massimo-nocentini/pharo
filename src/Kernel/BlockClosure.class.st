@@ -559,13 +559,6 @@ BlockClosure >> receiver [
 	^outerContext receiver
 ]
 
-{ #category : #private }
-BlockClosure >> reentrant [
-	"Answer a version of the recever that can be reentered.
-	 Closures are reentrant (unlike BlockContect) so simply answer self."
-	^self
-]
-
 { #category : #controlling }
 BlockClosure >> repeat [
 	"Evaluate the receiver repeatedly, ending only if the block explicitly returns."

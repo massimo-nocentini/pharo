@@ -95,6 +95,15 @@ Generator class >> somePrimes [
 		[generator atEnd] whileFalse:[ str nextPutAll: generator next printString; cr]]
 ]
 
+{ #category : #enumerating }
+Generator >> allButFirst [
+
+	^ self class on: [ :g | 
+		  self atEnd ifFalse: [ 
+			  self next.
+			  g nextPutAll: self ] ]
+]
+
 { #category : #testing }
 Generator >> atEnd [
 	"Answer whether the receiver can access any more objects."
@@ -110,6 +119,13 @@ Generator >> close [
 	continue := block := next := nil
 ]
 
+{ #category : #enumerating }
+Generator >> collect: aBlock [
+
+	^ self class on: [ :g | 
+		  self do: [ :each | g nextPut: (aBlock value: each) ] ]
+]
+
 { #category : #accessing }
 Generator >> contents [
 	"Answer the contents of this generator. Do not call this method on infinite generators."
@@ -123,9 +139,10 @@ Generator >> contents [
 
 { #category : #private }
 Generator >> fork [
+
 	| result |
 	home := thisContext.
-	block reentrant value: self.
+	block value: self.
 	thisContext swapSender: continue.
 	result := next.
 	continue := next := home := nil.
@@ -192,6 +209,22 @@ Generator >> value: anObject [
 	"Allows passing generators as arguments to methods expecting blocks.
 	A synonym for #yield: / #nextPut:."
 	^ self nextPut: anObject
+]
+
+{ #category : #enumerating }
+Generator >> with: aStream collect: aBlock [
+
+	^ self class on: [ :g | 
+		  self
+			  with: aStream
+			  do: [ :a :b | g nextPut: (aBlock value: a value: b) ] ]
+]
+
+{ #category : #enumerating }
+Generator >> with: aStream do: aBlock [
+
+	[ self atEnd or: [ aStream atEnd ] ] whileFalse: [ 
+		aBlock value: self next value: aStream next ]
 ]
 
 { #category : #public }

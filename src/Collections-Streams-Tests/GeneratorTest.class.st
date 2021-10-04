@@ -12,6 +12,35 @@ GeneratorTest class >> packageNamesUnderTest [
 	^ #('Generator')
 ]
 
+{ #category : #'as yet unclassified' }
+GeneratorTest >> cofibonacci [
+
+	^ Generator on: [ :g | 
+		  g
+			  nextPut: 0;
+			  nextPut: 1;
+			  nextPutAll: (g with: g allButFirst collect: [ :a :b | a + b ]) ]
+]
+
+{ #category : #'as yet unclassified' }
+GeneratorTest >> factorial: n [
+
+	".. code:: javascript
+	
+function* factorial(n) {
+  if (n === 0) return 1;
+  const n1 = yield factorial(n - 1);
+  return n * n1;
+}
+
+	"
+
+	^ Generator on: [ :g | 
+		  n < 2
+			  ifTrue: [ g nextPut: 1 ]
+			  ifFalse: [ g nextPut: n * (self factorial: n - 1) next ] ]
+]
+
 { #category : #generators }
 GeneratorTest >> fibonacciSequence [
 	"Yields an infinite sequence of fibonacci numbers."
@@ -31,6 +60,16 @@ GeneratorTest >> numbersBetween: aStartInteger and: aStopInteger [
 	^ Generator on: [ :generator |
 		aStartInteger to: aStopInteger 
 			do: [ :value | generator yield: value ] ]
+]
+
+{ #category : #tests }
+GeneratorTest >> testAllButFirst [
+
+	| generator |
+	generator := self fibonacciSequence allButFirst allButFirst.
+	self
+		assert: (generator next: 10) asArray
+		equals: #( 2 3 5 8 13 21 34 55 89 144 )
 ]
 
 { #category : #tests }
@@ -74,6 +113,27 @@ GeneratorTest >> testClose [
 ]
 
 { #category : #tests }
+GeneratorTest >> testCoFibonacci [
+
+	| generator |
+	generator := self cofibonacci.
+	self
+		should: [ (generator next: 6) asArray ]
+		raise: MessageNotUnderstood
+]
+
+{ #category : #tests }
+GeneratorTest >> testCollect [
+
+	| generator |
+	generator := self fibonacciSequence allButFirst collect: [ :each | 
+		             each - 1 ].
+	self
+		assert: (generator next: 10) asArray
+		equals: #( 0 1 2 4 7 12 20 33 54 88 ) "http://oeis.org/A000071"
+]
+
+{ #category : #tests }
 GeneratorTest >> testContents [
 	| generator |
 	generator := self numbersBetween: 1 and: 3.
@@ -111,6 +171,14 @@ GeneratorTest >> testErrorPropagation [
 			g yield: 1.
 			g error: 'yo' ].
 	self should: [ generator next ] raise: Error
+]
+
+{ #category : #tests }
+GeneratorTest >> testFactorial [
+
+	| generator |
+	generator := self factorial: 10.
+	self assert: generator contents equals: #( 3628800 )
 ]
 
 { #category : #tests }
