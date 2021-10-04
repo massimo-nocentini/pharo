@@ -504,6 +504,14 @@ BlockClosure >> on: exception fork: handlerAction [
 			  nil ]
 ]
 
+{ #category : #dispatched }
+BlockClosure >> onCoroutine: aCoroutine [
+
+	^ aCoroutine
+		  block: self;
+		  yourself
+]
+
 { #category : #exceptions }
 BlockClosure >> onDNU: selector do: handleBlock [
 	"Catch MessageNotUnderstood exceptions but only those of the given selector (DNU stands for doesNotUnderstand:)"
