@@ -19,6 +19,18 @@ CoroutineTest >> coroutineOn: aBlock [
 ]
 
 { #category : #test }
+CoroutineTest >> permutation: array size: size resume: resume [
+
+	size = 1
+		ifTrue: [ resume value: array copy ]
+		ifFalse: [ 
+			1 to: size do: [ :i | 
+				array swap: i with: size.
+				self permutation: array size: size - 1 resume: resume.
+				array swap: i with: size ] ]
+]
+
+{ #category : #test }
 CoroutineTest >> testAlphabet [
 
 	"create an alphabet using coroutines"
@@ -72,6 +84,39 @@ CoroutineTest >> testInitialResume [
 	main value: nil.
 
 	self assert: res equals: #( 1 2 5 )
+]
+
+{ #category : #test }
+CoroutineTest >> testPermutations [
+
+	| co array main perms n |
+	n := 4.
+	array := (1 to: n) asArray.
+	perms := Set new.
+
+	main := co := nil.
+
+	co := self coroutineOn: [ :resume :size | 
+		      self
+			      permutation: array
+			      size: size
+			      resume: [ :perm | resume value: main value: perm ] ].
+
+	main := self coroutineOn: [ :resume :size | 
+		        1 to: n factorial do: [ :each | 
+		        perms add: (resume value: co value: size) ] ].
+
+	main value: array size.
+
+	self assert: perms size equals: n factorial.
+
+	self assert: perms equals: (Set withAll:
+			 #( #( 2 3 1 4 ) #( 4 2 3 1 ) #( 4 2 1 3 ) #( 1 2 4 3 )
+			    #( 3 2 4 1 ) #( 3 2 1 4 ) #( 3 1 4 2 ) #( 3 4 1 2 )
+			    #( 4 1 3 2 ) #( 2 4 3 1 ) #( 3 1 2 4 ) #( 1 4 2 3 )
+			    #( 3 4 2 1 ) #( 2 1 4 3 ) #( 2 4 1 3 ) #( 1 2 3 4 )
+			    #( 1 4 3 2 ) #( 4 1 2 3 ) #( 2 3 4 1 ) #( 4 3 1 2 )
+			    #( 2 1 3 4 ) #( 4 3 2 1 ) #( 1 3 4 2 ) #( 1 3 2 4 ) ))
 ]
 
 { #category : #tests }
