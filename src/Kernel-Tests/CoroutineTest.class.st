@@ -57,6 +57,53 @@ CoroutineTest >> testIdentity [
 ]
 
 { #category : #tests }
+CoroutineTest >> testInitialResume [
+
+	| co main res |
+	co := self coroutineOn: [ :resume :v | 
+		      res := { 
+			             v first.
+			             v second.
+			             (v third + 2) } ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        resume value: co value: #( 1 2 3 ) ].
+
+	main value: nil.
+
+	self assert: res equals: #( 1 2 5 )
+]
+
+{ #category : #tests }
+CoroutineTest >> testProducerConsumer [
+
+	| producer consumer values random |
+	values := OrderedCollection new.
+	random := Random seed: 13.
+
+	producer := consumer := nil.
+
+	producer := self coroutineOn: [ :resume :p | 
+		            [ 
+		            | coin size |
+		            coin := (random next < p) asBit.
+		            size := resume value: consumer value: coin.
+		            size < 10 ] whileTrue ].
+
+	consumer := self coroutineOn: [ :resume :value | 
+		            | coin |
+		            coin := value.
+		            [ 
+		            values add: coin.
+		            coin := resume value: producer value: values size ]
+			            repeat ].
+
+	producer value: 0.6.
+
+	self assert: values asArray equals: #( 1 0 0 0 0 0 0 0 0 1 )
+]
+
+{ #category : #tests }
 CoroutineTest >> testProduct [
 
 	| co p n |
@@ -153,6 +200,25 @@ CoroutineTest >> testReset [
 	a value.
 
 	self assert: res asArray equals: #( Hi Hola Hola Bye )
+]
+
+{ #category : #tests }
+CoroutineTest >> testResumeYield [
+
+	| co main res |
+	main := nil.
+
+	co := self coroutineOn: [ :resume :v | 
+		      resume value: main value: { 
+				      (v first + v second).
+				      (v first - v second) } ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        resume value: co value: value ].
+
+	res := main value: #( 20 10 ).
+
+	self assert: res equals: #( 30 10 )
 ]
 
 { #category : #test }
@@ -341,23 +407,31 @@ hate leads to suffering
 { #category : #tests }
 CoroutineTest >> testYieldInterval [
 
-	| co main values |
+	| co1to10 main values |
 	values := OrderedCollection new.
 
 	main := nil.
 
-	co := self coroutineOn: [ :resume :useless | 
-		      1 to: 10 do: [ :each | resume value: main value: each ] ].
+	co1to10 := self coroutineOn: [ :resume :useless | 
+		           1 to: 10 do: [ :each | resume value: main value: each ] ].
 
 	main := self coroutineOn: [ :resume :value | 
+		        | a b c |
+		        values add: value.
+		        a := resume value: co1to10 value: nil.
+		        values add: value.
+		        b := resume value: co1to10 value: nil.
+		        values add: value.
+		        c := resume value: co1to10 value: nil.
 		        values
-			        add: (resume value: co value: nil);
-			        add: (resume value: co value: nil);
-			        add: (resume value: co value: nil) ].
+			        add: value;
+			        add: a;
+			        add: b;
+			        add: c ].
 
 	main value: nil.
 
-	self assert: values asArray equals: #( 1 2 3 )
+	self assert: values asArray equals: #( nil nil nil nil 1 2 3 )
 ]
 
 { #category : #tests }
@@ -381,6 +455,65 @@ CoroutineTest >> testYieldManyTimesWhenExhausted [
 	main value: nil.
 
 	self assert: values asArray equals: #( 1 2 1 4 )
+]
+
+{ #category : #tests }
+CoroutineTest >> testYieldResume [
+
+	| co main values answer return greet reply final f |
+	greet := 'Hi!'.
+	reply := #( 4 5 ).
+	answer := 42.
+	return := #( 6 7 ).
+	final := #( 8 9 ).
+	values := OrderedCollection new.
+
+	main := nil.
+
+	co := self coroutineOn: [ :resume :value | 
+		      values
+			      add: value;
+			      add: (resume value: main value: answer).
+		      return ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        | v w |
+		        v := resume value: co value: greet.
+		        self assert: v equals: answer.
+		        w := resume value: co value: reply.
+		        self assert: w equals: return.
+		        final ].
+
+	f := main value: nil.
+
+	self
+		assert: values asArray equals: { 
+				greet.
+				reply };
+		assert: f equals: final
+]
+
+{ #category : #tests }
+CoroutineTest >> testYieldResumeWithoutReturning [
+
+	| co main values |
+	values := OrderedCollection new.
+
+	main := nil.
+
+	co := self coroutineOn: [ :resume :value | 
+		      values
+			      add: value;
+			      add: (resume value: main value: 42) ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        | v |
+		        v := resume value: co value: 'Hi!'.
+		        self assert: v equals: 42 ].
+
+	main value: nil.
+
+	self assert: values asArray equals: #( 'Hi!' )
 ]
 
 { #category : #utilities }
