@@ -139,14 +139,14 @@ CoroutineTest >> testReset [
 	a := b := nil.
 	res := OrderedCollection new.
 
-	a := self coroutineOn: [ :resume | 
+	a := self coroutineOn: [ :resume :useless | 
 		     res add: 'Hi'.
 		     res add: (resume value: b value: nil).
 		     b reset.
 		     res add: (resume value: b value: nil).
 		     res add: 'Bye' ].
 
-	b := self coroutineOn: [ :resume | 
+	b := self coroutineOn: [ :resume :useless | 
 		     res add: (resume value: a value: 'Hola').
 		     res add: 'Adeu' ].
 
@@ -252,17 +252,17 @@ CoroutineTest >> testStatement [
 	| res a b c |
 	a := b := c := 0.
 	res := OrderedCollection new.
-	a := self coroutineOn: [ :resume | 
+	a := self coroutineOn: [ :resume :useless | 
 		     res add: 'This is A'.
 		     res add: 'Came from ' , (resume value: b value: 'A').
 		     res add: 'Back in A'.
 		     res add: 'Came from ' , (resume value: c value: 'A') ].
-	b := self coroutineOn: [ :resume | 
+	b := self coroutineOn: [ :resume :useless | 
 		     res add: '       This is B'.
 		     res add: '       Came from ' , (resume value: c value: 'B').
 		     res add: '       Back in B'.
 		     res add: '       Came from ' , (resume value: a value: 'B') ].
-	c := self coroutineOn: [ :resume | 
+	c := self coroutineOn: [ :resume :useless | 
 		     res add: '           This is C'.
 		     res add: '           Came from ' , (resume value: a value: 'C').
 		     res add: '           Back in C'.
@@ -288,13 +288,14 @@ CoroutineTest >> testSumOneToN [
 	"use coroutines to get  the summation on 1 to n"
 
 	| sum |
-	sum := self coroutineOn: [ :resume :value :co | 
+	sum := nil.
+	sum := self coroutineOn: [ :resume :value | 
 		       | x v |
 		       v := value.
 		       x := 0.
 		       [ v > 0 ] whileTrue: [ 
 			       x := x + v.
-			       v := resume value: co value: v - 1 ].
+			       v := resume value: sum value: v - 1 ].
 		       x ].
 
 	self assert: (sum value: 10) equals: (1 to: 10) sum.
@@ -312,12 +313,12 @@ CoroutineTest >> testTheForce [
 	res := OrderedCollection new.
 	words := OrderedCollection withAll:
 		         #( 'fear' 'anger' 'hate' 'suffering' ).
-	a := self coroutineOn: [ :resume | 
+	a := self coroutineOn: [ :resume :useless | 
 		     [ words size > 1 ] whileTrue: [ 
 			     res
 				     add: (resume value: c value: words first);
 				     add: Character cr asString ] ].
-	b := self coroutineOn: [ :resume | 
+	b := self coroutineOn: [ :resume :useless | 
 		     [ res add: (resume value: a value: words first) ] repeat ].
 	c := self coroutineOn: [ :resume :value | 
 		     res
@@ -335,6 +336,51 @@ CoroutineTest >> testTheForce [
 anger leads to hate
 hate leads to suffering
 '
+]
+
+{ #category : #tests }
+CoroutineTest >> testYieldInterval [
+
+	| co main values |
+	values := OrderedCollection new.
+
+	main := nil.
+
+	co := self coroutineOn: [ :resume :useless | 
+		      1 to: 10 do: [ :each | resume value: main value: each ] ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        values
+			        add: (resume value: co value: nil);
+			        add: (resume value: co value: nil);
+			        add: (resume value: co value: nil) ].
+
+	main value: nil.
+
+	self assert: values asArray equals: #( 1 2 3 )
+]
+
+{ #category : #tests }
+CoroutineTest >> testYieldManyTimesWhenExhausted [
+
+	| co main values |
+	values := OrderedCollection new.
+
+	main := nil.
+
+	co := self coroutineOn: [ :resume :value | 
+		      resume value: main value: 1 ].
+
+	main := self coroutineOn: [ :resume :value | 
+		        values
+			        add: (resume value: co value: 1);
+			        add: (resume value: co value: 2);
+			        add: (resume value: co value: 3);
+			        add: (resume value: co value: 4) ].
+
+	main value: nil.
+
+	self assert: values asArray equals: #( 1 2 1 4 )
 ]
 
 { #category : #utilities }

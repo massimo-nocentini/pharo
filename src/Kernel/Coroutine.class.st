@@ -75,11 +75,10 @@ Coroutine >> value: aValue [
 	^ cont
 		  ifNil: [ 
 			  block
-				  cull: [ :coroutine :value | 
+				  value: [ :coroutine :value | 
 					  self swapContext: thisContext sender.
 					  coroutine value: value ]
-				  cull: aValue
-				  cull: self ]
+				  value: aValue ]
 		  ifNotNil: [ 
 			  | contTmp |
 			  contTmp := self swapContext: nil.
