@@ -19,18 +19,6 @@ CoroutineTest >> coroutineOn: aBlock [
 ]
 
 { #category : #test }
-CoroutineTest >> permutation: array size: size resume: resume [
-
-	size = 1
-		ifTrue: [ resume value: array copy ]
-		ifFalse: [ 
-			1 to: size do: [ :i | 
-				array swap: i with: size.
-				self permutation: array size: size - 1 resume: resume.
-				array swap: i with: size ] ]
-]
-
-{ #category : #test }
 CoroutineTest >> testAlphabet [
 
 	"create an alphabet using coroutines"
@@ -89,26 +77,25 @@ CoroutineTest >> testInitialResume [
 { #category : #test }
 CoroutineTest >> testPermutations [
 
-	| co array main perms n |
+	| co array main perms n expectedSize |
 	n := 4.
 	array := (1 to: n) asArray.
 	perms := Set new.
+	expectedSize := n factorial.
 
 	main := co := nil.
 
-	co := self coroutineOn: [ :resume :size | 
-		      self
-			      permutation: array
-			      size: size
-			      resume: [ :perm | resume value: main value: perm ] ].
+	co := self coroutineOn: [ :resume | 
+		      array permutationsDo: [ :perm | 
+			      resume value: main value: perm copy ] ].
 
-	main := self coroutineOn: [ :resume :size | 
-		        1 to: n factorial do: [ :each | 
-		        perms add: (resume value: co value: size) ] ].
+	main := self coroutineOn: [ :resume | 
+		        1 to: expectedSize do: [ :each | 
+		        perms add: (resume value: co value: nil) ] ].
 
-	main value: array size.
+	main value: nil.
 
-	self assert: perms size equals: n factorial.
+	self assert: perms size equals: expectedSize.
 
 	self assert: perms equals: (Set withAll:
 			 #( #( 2 3 1 4 ) #( 4 2 3 1 ) #( 4 2 1 3 ) #( 1 2 4 3 )
@@ -242,7 +229,7 @@ CoroutineTest >> testReset [
 		     res add: (resume value: a value: 'Hola').
 		     res add: 'Adeu' ].
 
-	a value.
+	a value: nil.
 
 	self assert: res asArray equals: #( Hi Hola Hola Bye )
 ]
@@ -378,7 +365,7 @@ CoroutineTest >> testStatement [
 		     res add: '           Came from ' , (resume value: a value: 'C').
 		     res add: '           Back in C'.
 		     res add: '           Came from ' , (resume value: b value: 'C') ].
-	a value.
+	a value: nil.
 	res := res joinUsing: Character cr asString.
 
 	self assert: res equals: 'This is A
@@ -439,7 +426,7 @@ CoroutineTest >> testTheForce [
 		     words removeFirst.
 		     res add: (resume value: b value: ' leads to ') ] repeat ].
 
-	a value.
+	a value: nil.
 
 	res := res joinUsing: ''.
 

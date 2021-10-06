@@ -64,21 +64,16 @@ Coroutine >> swapContext: aContext [
 ]
 
 { #category : #accessing }
-Coroutine >> value [
-
-	^ self value: nil
-]
-
-{ #category : #accessing }
 Coroutine >> value: aValue [
 
 	^ cont
 		  ifNil: [ 
 			  block
-				  value: [ :coroutine :value | 
+				  cull: [ :coroutine :value | 
 					  self swapContext: thisContext sender.
 					  coroutine value: value ]
-				  value: aValue ]
+				  cull: aValue
+				  cull: self ]
 		  ifNotNil: [ 
 			  | contTmp |
 			  contTmp := self swapContext: nil.
