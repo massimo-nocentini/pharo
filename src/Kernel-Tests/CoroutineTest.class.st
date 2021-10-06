@@ -47,6 +47,38 @@ CoroutineTest >> testAlphabet [
 	self assert: res equals: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 ]
 
+{ #category : #test }
+CoroutineTest >> testCombinations [
+
+	| co array main perms n expectedSize k |
+	n := 6.
+	k := 4.
+	array := (1 to: n) asArray.
+	perms := Set new.
+	expectedSize := n factorial / (k factorial * (n - k) factorial).
+
+	main := co := nil.
+
+	co := self coroutineOn: [ :resume | 
+		      array
+			      combinations: k
+			      atATimeDo: [ :perm | resume value: main value: perm copy ] ].
+
+	main := self coroutineOn: [ :resume | 
+		        1 to: expectedSize do: [ :each | 
+		        perms add: (resume value: co value: nil) ] ].
+
+	main value: nil.
+
+	self assert: perms size equals: expectedSize.
+
+	self assert: perms equals: (Set withAll:
+			 #( #( 1 2 3 6 ) #( 1 2 3 4 ) #( 2 3 5 6 ) #( 1 2 4 6 )
+			    #( 2 3 4 5 ) #( 1 3 4 5 ) #( 1 2 5 6 ) #( 2 4 5 6 )
+			    #( 1 4 5 6 ) #( 1 2 3 5 ) #( 3 4 5 6 ) #( 1 2 4 5 )
+			    #( 1 3 4 6 ) #( 1 3 5 6 ) #( 2 3 4 6 ) ))
+]
+
 { #category : #tests }
 CoroutineTest >> testIdentity [
 
@@ -385,20 +417,32 @@ CoroutineTest >> testSumOneToN [
 
 	"use coroutines to get  the summation on 1 to n"
 
-	| sum |
-	sum := nil.
-	sum := self coroutineOn: [ :resume :value | 
+	| sum calls |
+	calls := 0.
+	sum := self coroutineOn: [ :resume :value :co | 
 		       | x v |
+		       calls := calls + 1.
 		       v := value.
 		       x := 0.
 		       [ v > 0 ] whileTrue: [ 
 			       x := x + v.
-			       v := resume value: sum value: v - 1 ].
+			       v := resume value: co value: v - 1 ].
 		       x ].
 
-	self assert: (sum value: 10) equals: (1 to: 10) sum.
-	self assert: (sum value: 4) equals: (1 to: 4) sum.
-	self assert: (sum value: 3) equals: (1 to: 3) sum
+	self
+		assert: (sum value: 10) equals: (1 to: 10) sum;
+		assert: calls equals: 1.
+	calls := 0.
+
+	self
+		assert: (sum value: 4) equals: (1 to: 4) sum;
+		assert: calls equals: 1.
+	calls := 0.
+
+	self
+		assert: (sum value: 3) equals: (1 to: 3) sum;
+		assert: calls equals: 1.
+	calls := 0
 ]
 
 { #category : #test }
