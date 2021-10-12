@@ -8,7 +8,9 @@ Class {
 	#instVars : [
 		'block',
 		'ctx',
-		'resume'
+		'resume',
+		'value',
+		'isCompleted'
 	],
 	#category : #'Kernel-Methods'
 }
@@ -54,6 +56,7 @@ Coroutine >> initialize [
 
 	super initialize.
 
+	isCompleted := false.
 	resume := CoroutineResume new
 		          coroutine: self;
 		          yourself
@@ -62,7 +65,9 @@ Coroutine >> initialize [
 { #category : #clearing }
 Coroutine >> reset [
 
-	self swapContext: nil
+	self swapContext: nil.
+	isCompleted := false.
+	value := nil
 ]
 
 { #category : #accessing }
@@ -77,15 +82,29 @@ Coroutine >> swapContext: aContext [
 { #category : #accessing }
 Coroutine >> value: aValue [
 
-	^ ctx ifNil: [ block cull: resume cull: aValue ] ifNotNil: [ 
-		  | lastCtx |
-		  lastCtx := self swapContext: nil.
-		  thisContext swapSender: lastCtx.
-		  aValue ]
+	^ self valueIfNotCompleted: [ 
+		  ctx
+			  ifNil: [ 
+				  value := block cull: resume cull: aValue.
+				  isCompleted := true.
+				  value ]
+			  ifNotNil: [ 
+				  | lastCtx |
+				  lastCtx := self swapContext: nil.
+				  thisContext swapSender: lastCtx.
+				  aValue ] ]
 ]
 
 { #category : #accessing }
 Coroutine >> value: aValue resumedByCoroutine: aCoroutine [
 
 	^ self value: aValue
+]
+
+{ #category : #accessing }
+Coroutine >> valueIfNotCompleted: aBlock [
+
+	^ isCompleted
+		  ifTrue: [ value ]
+		  ifFalse: aBlock
 ]

@@ -18,6 +18,30 @@ CoroutineTest >> coroutineOn: aBlock [
 	^ Coroutine on: aBlock
 ]
 
+{ #category : #'expected values' }
+CoroutineTest >> expected_testProduct [
+
+	^ 1
+]
+
+{ #category : #'expected values' }
+CoroutineTest >> expected_testYieldManyTimesWhenExhausted [
+
+	^ #( 1 2 2 2 )
+]
+
+{ #category : #'expected values' }
+CoroutineTest >> expected_testYieldResume [
+
+	^ #( 'Hi!' #( 4 5 ) )
+]
+
+{ #category : #'expected values' }
+CoroutineTest >> expected_testYieldResumeInner [
+
+	^ #( 42 #( 6 7 ) #( 6 7 ) #( 6 7 ) )
+]
+
 { #category : #test }
 CoroutineTest >> testAlphabet [
 
@@ -177,7 +201,7 @@ CoroutineTest >> testProduct [
 	n := 10.
 	(1 to: n) do: co.
 
-	self assert: p equals: n factorial
+	self assert: p equals: self expected_testProduct
 ]
 
 { #category : #tests }
@@ -434,16 +458,19 @@ CoroutineTest >> testSumOneToN [
 		assert: (sum value: 10) equals: (1 to: 10) sum;
 		assert: calls equals: 1.
 	calls := 0.
+	sum reset.
 
 	self
 		assert: (sum value: 4) equals: (1 to: 4) sum;
 		assert: calls equals: 1.
 	calls := 0.
+	sum reset.
 
 	self
 		assert: (sum value: 3) equals: (1 to: 3) sum;
 		assert: calls equals: 1.
-	calls := 0
+	calls := 0.
+	sum reset
 ]
 
 { #category : #test }
@@ -531,7 +558,9 @@ CoroutineTest >> testYieldManyTimesWhenExhausted [
 
 	main value: nil.
 
-	self assert: values asArray equals: #( 1 2 1 4 )
+	self
+		assert: values asArray
+		equals: self expected_testYieldManyTimesWhenExhausted
 ]
 
 { #category : #tests }
@@ -554,22 +583,26 @@ CoroutineTest >> testYieldResume [
 		      return ].
 
 	main := self coroutineOn: [ :resume :value | 
-		        | v w z |
+		        | v w z zz |
 		        v := resume value: co value: greet.
-		        self assert: v equals: answer.
 		        w := resume value: co value: reply.
-		        self assert: w equals: return.
-		        z := resume value: co value: #last.
-		        self assert: z equals: answer.
+		        z := resume value: co value: #butLast.
+		        zz := resume value: co value: #last.
+
+		        self
+			        assert: { 
+					        v.
+					        w.
+					        z.
+					        zz }
+			        equals: self expected_testYieldResumeInner.
+
 		        final ].
 
 	f := main value: nil.
 
 	self
-		assert: values asArray equals: { 
-				greet.
-				reply.
-				#last };
+		assert: values asArray equals: self expected_testYieldResume;
 		assert: f equals: final
 ]
 
