@@ -55,12 +55,6 @@ Coroutine >> reset [
 ]
 
 { #category : #accessing }
-Coroutine >> resumeValue: aValue [
-
-	^ self value: aValue
-]
-
-{ #category : #accessing }
 Coroutine >> swapContext: aContext [
 
 	| old |
@@ -77,12 +71,18 @@ Coroutine >> value: aValue [
 			  block
 				  cull: [ :coroutine :value | 
 					  self swapContext: thisContext sender.
-					  coroutine resumeValue: value ]
+					  coroutine value: value resumedByCoroutine: self ]
 				  cull: aValue
 				  cull: self ]
 		  ifNotNil: [ 
-			  | contTmp |
-			  contTmp := self swapContext: nil.
-			  thisContext swapSender: contTmp.
+			  | lastCtx |
+			  lastCtx := self swapContext: nil.
+			  thisContext swapSender: lastCtx.
 			  aValue ]
+]
+
+{ #category : #accessing }
+Coroutine >> value: aValue resumedByCoroutine: aCoroutine [
+
+	^ self value: aValue
 ]
