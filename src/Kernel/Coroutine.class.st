@@ -7,7 +7,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'block',
-		'ctx'
+		'ctx',
+		'resume'
 	],
 	#category : #'Kernel-Methods'
 }
@@ -48,6 +49,16 @@ Coroutine >> block: aBlock [
 	block := aBlock
 ]
 
+{ #category : #accessing }
+Coroutine >> initialize [
+
+	super initialize.
+
+	resume := CoroutineResume new
+		          coroutine: self;
+		          yourself
+]
+
 { #category : #clearing }
 Coroutine >> reset [
 
@@ -66,19 +77,11 @@ Coroutine >> swapContext: aContext [
 { #category : #accessing }
 Coroutine >> value: aValue [
 
-	^ ctx
-		  ifNil: [ 
-			  block
-				  cull: [ :coroutine :value | 
-					  self swapContext: thisContext sender.
-					  coroutine value: value resumedByCoroutine: self ]
-				  cull: aValue
-				  cull: self ]
-		  ifNotNil: [ 
-			  | lastCtx |
-			  lastCtx := self swapContext: nil.
-			  thisContext swapSender: lastCtx.
-			  aValue ]
+	^ ctx ifNil: [ block cull: resume cull: aValue ] ifNotNil: [ 
+		  | lastCtx |
+		  lastCtx := self swapContext: nil.
+		  thisContext swapSender: lastCtx.
+		  aValue ]
 ]
 
 { #category : #accessing }

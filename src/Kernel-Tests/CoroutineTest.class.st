@@ -419,14 +419,15 @@ CoroutineTest >> testSumOneToN [
 
 	| sum calls |
 	calls := 0.
-	sum := self coroutineOn: [ :resume :value :co | 
+	sum := nil.
+	sum := self coroutineOn: [ :resume :value | 
 		       | x v |
 		       calls := calls + 1.
 		       v := value.
 		       x := 0.
 		       [ v > 0 ] whileTrue: [ 
 			       x := x + v.
-			       v := resume value: co value: v - 1 ].
+			       v := resume value: sum value: v - 1 ].
 		       x ].
 
 	self
@@ -553,11 +554,13 @@ CoroutineTest >> testYieldResume [
 		      return ].
 
 	main := self coroutineOn: [ :resume :value | 
-		        | v w |
+		        | v w z |
 		        v := resume value: co value: greet.
 		        self assert: v equals: answer.
 		        w := resume value: co value: reply.
 		        self assert: w equals: return.
+		        z := resume value: co value: #last.
+		        self assert: z equals: answer.
 		        final ].
 
 	f := main value: nil.
@@ -565,7 +568,8 @@ CoroutineTest >> testYieldResume [
 	self
 		assert: values asArray equals: { 
 				greet.
-				reply };
+				reply.
+				#last };
 		assert: f equals: final
 ]
 
