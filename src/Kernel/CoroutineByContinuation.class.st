@@ -22,7 +22,7 @@ Class {
 { #category : #accessing }
 CoroutineByContinuation >> value: aValue [
 
-	^ cont
+	^ ctx
 		  ifNil: [ 
 			  block
 				  cull: [ :coroutine :value | 

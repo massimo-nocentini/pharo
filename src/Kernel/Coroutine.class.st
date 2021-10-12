@@ -7,7 +7,7 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'block',
-		'cont'
+		'ctx'
 	],
 	#category : #'Kernel-Methods'
 }
@@ -42,7 +42,7 @@ Coroutine class >> try: tryBlock otherwise: elseBlock [
 		  elseBlock cull: localResult ]
 ]
 
-{ #category : #'initailize-release' }
+{ #category : #accessing }
 Coroutine >> block: aBlock [
 
 	block := aBlock
@@ -50,28 +50,34 @@ Coroutine >> block: aBlock [
 
 { #category : #clearing }
 Coroutine >> reset [
-	"reset the coroutine so next time it starts at the begining of the block"
-	cont := nil.
+
+	self swapContext: nil
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+Coroutine >> resumeValue: aValue [
+
+	^ self value: aValue
+]
+
+{ #category : #accessing }
 Coroutine >> swapContext: aContext [
 
 	| old |
-	old := cont.
-	cont := aContext.
+	old := ctx.
+	ctx := aContext.
 	^ old
 ]
 
 { #category : #accessing }
 Coroutine >> value: aValue [
 
-	^ cont
+	^ ctx
 		  ifNil: [ 
 			  block
 				  cull: [ :coroutine :value | 
 					  self swapContext: thisContext sender.
-					  coroutine value: value ]
+					  coroutine resumeValue: value ]
 				  cull: aValue
 				  cull: self ]
 		  ifNotNil: [ 
