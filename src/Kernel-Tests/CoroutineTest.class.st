@@ -219,9 +219,9 @@ CoroutineTest >> testProductWithZero [
 
 	co := self coroutineOn: [ :resume :aCollection | 
 		      aCollection do: [ :each | 
-			      each
-				      ifZero: [ resume value: zeroCo value: each ]
-				      ifNotZero: [ 
+			      each isZero
+				      ifTrue: [ resume value: zeroCo value: each ]
+				      ifFalse: [ 
 					      p := p * each.
 					      multiplications := multiplications + 1 ] ] ].
 
@@ -241,15 +241,17 @@ CoroutineTest >> testProductWithZeroAllCo [
 	numbers := #( 1 10 2 4 0 3 5 6 8 9 7 ).
 	witness := Object new.
 
+	mainCo := nil.
+
 	zeroCo := self coroutineOn: [ :resume :value | 
 		          p := 0.
 		          resume value: mainCo value: witness ].
 
 	prod := self coroutineOn: [ :resume :aCollection | 
 		        aCollection do: [ :each | 
-			        each
-				        ifZero: [ resume value: zeroCo value: each ]
-				        ifNotZero: [ 
+			        each isZero
+				        ifTrue: [ resume value: zeroCo value: each ]
+				        ifFalse: [ 
 					        p := p * each.
 					        multiplications := multiplications + 1 ] ] ].
 
