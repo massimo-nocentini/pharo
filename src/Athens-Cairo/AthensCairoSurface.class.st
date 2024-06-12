@@ -188,16 +188,19 @@ AthensCairoSurface class >> extent: anExtent format: aFormat [
 AthensCairoSurface class >> finalizeResourceData: data [
 	"Finalize external state"
 
-	| surfaceHandle surfaceId contextHandle |
+	| surfaceHandle surfaceId contextHandle pangoLayoutHandle |
 	surfaceHandle := data first.
 	surfaceId := data second.
 	contextHandle := data third.
+	pangoLayoutHandle := data fourth.
 
 	self
 		unregisterSurfaceWithId: surfaceId;
+		g_object_unref: pangoLayoutHandle;
 		destroyContextHandle: contextHandle;
 		destroySurfaceHandle: surfaceHandle.
 
+	pangoLayoutHandle beNull.
 	contextHandle beNull.
 	surfaceHandle beNull
 ]
@@ -219,6 +222,14 @@ AthensCairoSurface class >> fromForm: aForm [
 	LibC memCopy: newBits to: surface getDataPtr getHandle size: (form width * form height *4).
 	surface markDirty.
 	^ surface
+]
+
+{ #category : 'finalize resources' }
+AthensCairoSurface class >> g_object_unref: handler [
+	"Do nothing if the primitive fails to release the Pango layout handle."
+
+	<primitive: 'primitive_g_object_unref' module: 'CairoGraphicsPlugin'>
+	
 ]
 
 { #category : 'surface plugin callbacks' }
@@ -595,12 +606,7 @@ AthensCairoSurface >> newCanvas [
 	"Answer a preinitialized instance of AthensCanvas.
 	Private to receiver and its subclasses, override seldom"
 
-	^ self primCreateCanvas surface: self
-]
-
-{ #category : 'private' }
-AthensCairoSurface >> primCreateCanvas [
-	^ self ffiCall: #( AthensCairoCanvas cairo_create (self) )
+	^ AthensCairoCanvas on: self
 ]
 
 { #category : 'private' }
@@ -623,7 +629,8 @@ AthensCairoSurface >> resourceData [
 	^ {
 		  self getHandle.
 		  id.
-		  context getHandle }
+		  context getHandle.
+		  context pangoLayoutHandle }
 ]
 
 { #category : 'private' }

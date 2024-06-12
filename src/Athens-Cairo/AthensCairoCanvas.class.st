@@ -10,7 +10,8 @@ Class {
 		'handle',
 		'pathTransform',
 		'paintTransform',
-		'currentClipRect'
+		'currentClipRect',
+		'pangoLayoutHandle'
 	],
 	#pools : [
 		'AthensCairoDefinitions'
@@ -29,7 +30,9 @@ AthensCairoCanvas class >> asExternalTypeOn: generator [
 { #category : 'private' }
 AthensCairoCanvas class >> on: cairoSurface [
 
-	^ (self primCreate: cairoSurface) surface: cairoSurface
+	^ (self primCreate: cairoSurface)
+		  surface: cairoSurface;
+		  yourself
 ]
 
 { #category : 'primitives' }
@@ -164,6 +167,14 @@ AthensCairoCanvas >> moveToX: x Y: y [
 	^ self primMoveToX: x asFloat Y: y asFloat
 ]
 
+{ #category : 'primitives' }
+AthensCairoCanvas >> newPangoLayoutHandleOnAthensCairoCanvasHandle: cairoCanvas [
+
+	<primitive: 'primitive_pango_cairo_create_layout' module:
+	'CairoGraphicsPlugin'>
+	^ ExternalAddress null
+]
+
 { #category : 'private' }
 AthensCairoCanvas >> newPath [
 	^ self ffiCall: #( void cairo_new_path ( self ) )
@@ -172,6 +183,12 @@ AthensCairoCanvas >> newPath [
 { #category : 'accessing' }
 AthensCairoCanvas >> paintTransform [
 	^ paintTransform
+]
+
+{ #category : 'accessing' }
+AthensCairoCanvas >> pangoLayoutHandle [
+
+	^ pangoLayoutHandle
 ]
 
 { #category : 'accessing' }
@@ -420,15 +437,18 @@ AthensCairoCanvas >> stroke [
 
 { #category : 'accessing' }
 AthensCairoCanvas >> surface: aCairoSurface [
-
 	"initialize for given surface"
+
 	surface := aCairoSurface.
 
 	pathTransform := AthensCairoMatrix new.
 	paintTransform := AthensCairoMatrix new.
 	paintMode := AthensCairoPaintMode new canvas: self.
 
-	self setAA: CAIRO_ANTIALIAS_GOOD
+	self setAA: CAIRO_ANTIALIAS_GOOD.
+
+	pangoLayoutHandle := self newPangoLayoutHandleOnAthensCairoCanvasHandle:
+		               self getHandle
 ]
 
 { #category : 'private' }
