@@ -158,8 +158,8 @@ AthensCairoCanvas >> getScaledFont [
 	To keep a reference to it, you must call [`cairo_scaled_font_reference`](https://www.cairographics.org/manual/cairo-cairo-scaled-font-t.html#cairo-scaled-font-reference)."
 
 	^ self
-		  primitiveGetScaledFont: self getHandle
-		  scaledFontClass: CairoScaledFont
+		  primitive: self getHandle
+		  getScaledFont: CairoScaledFont
 ]
 
 { #category : 'accessing' }
@@ -325,18 +325,18 @@ AthensCairoCanvas >> primSetSourceR: red g: green b: blue a: alpha [
 ]
 
 { #category : 'primitives - CairoGraphicsPlugin' }
-AthensCairoCanvas >> primitive: cairoHandle textPath: anUTF8EncodedString [
-
-	<primitive: 'primitive_cairo_text_path' module: 'CairoGraphicsPlugin'>
-	^ self ffiTextPath: anUTF8EncodedString
-]
-
-{ #category : 'primitives - CairoGraphicsPlugin' }
-AthensCairoCanvas >> primitiveGetScaledFont: cairo_tHandle scaledFontClass: aClass [
+AthensCairoCanvas >> primitive: cairo_tHandle getScaledFont: aClass [
 
 	<primitive: 'primitive_cairo_get_scaled_font' module:
 	'CairoGraphicsPlugin'>
 	^ self ffiGetScaledFont
+]
+
+{ #category : 'primitives - CairoGraphicsPlugin' }
+AthensCairoCanvas >> primitive: cairo_tHandle textPath: anUTF8EncodedString [
+
+	<primitive: 'primitive_cairo_text_path' module: 'CairoGraphicsPlugin'>
+	^ self ffiTextPath: anUTF8EncodedString
 ]
 
 { #category : 'private' }
