@@ -16,14 +16,16 @@ AthensCairoCanvas>>#getCurrentPoint
 assume that the `handle` slot
 
 ```pharoeval
-slot := AthensCairoCanvas slotNamed: #handle.
-slot name
+RSGroup new 
+	add: AthensCanvas asFluidDefinitionShape;
+	add: AthensCairoCanvas asFluidDefinitionShape;
+	yourself
 ```
 
 remains at a fixed position.
 
 ```pharoeval
-slot index
+(AthensCairoCanvas slotNamed: #handle) index
 ```
 "
 Class {
