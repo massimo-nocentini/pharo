@@ -102,6 +102,12 @@ AthensCairoCanvas >> ffiFill [
 	^ self ffiCall: #( void cairo_fill #( self ) )
 ]
 
+{ #category : 'drawing' }
+AthensCairoCanvas >> ffiFillPreserve [
+
+	^ self ffiCall: #( #void #cairo_fill_preserve #( #self ) )
+]
+
 { #category : 'private' }
 AthensCairoCanvas >> ffiGetScaledFont [
 
@@ -116,16 +122,16 @@ AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
 		  #( void cairo_text_path #( self #, void #* anUTF8EncodedString ) )
 ]
 
-{ #category : 'private' }
+{ #category : 'drawing' }
 AthensCairoCanvas >> fill [
-	"Binds the C function [`cairo_fill`](https://www.cairographics.org/manual/cairo-cairo-t.html#cairo-fill)"
 
 	^ self primitiveFill: self getHandle
 ]
 
 { #category : 'drawing' }
 AthensCairoCanvas >> fillPreserve [
-	^ self ffiCall: #(#void #cairo_fill_preserve #(#self))
+
+	^ self primitiveFillPreserve: self getHandle
 ]
 
 { #category : 'accessing' }
@@ -160,7 +166,7 @@ AthensCairoCanvas >> getHandle [
 	^ handle
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
 AthensCairoCanvas >> getScaledFont [
 	"Returns the current scaled font. This object is owned by cairo.
 	To keep a reference to it, you must call [`cairo_scaled_font_reference`](https://www.cairographics.org/manual/cairo-cairo-scaled-font-t.html#cairo-scaled-font-reference)."
@@ -354,6 +360,14 @@ AthensCairoCanvas >> primitiveFill: cairo_tHandle [
 	^ self ffiFill
 ]
 
+{ #category : 'primitives of CairoGraphicsPlugin' }
+AthensCairoCanvas >> primitiveFillPreserve: cairo_tHandle [
+
+	<primitive: 'primitive_cairo_fill_preserve' module:
+	'CairoGraphicsPlugin'>
+	^ self ffiFillPreserve
+]
+
 { #category : 'private' }
 AthensCairoCanvas >> pushClipRect: aRectangle [
 	self newPath;
@@ -507,6 +521,14 @@ void                cairo_text_extents                  (cairo_t *cr,
                                                          cairo_text_extents_t *extents);
 "
 	^ self ffiCall: #( void cairo_text_extents (self, char *utf8String, cairo_text_extents_t *extentsObj) )
+]
+
+{ #category : 'drawing' }
+AthensCairoCanvas >> textPath: anUTF8EncodedString [
+	"A drawing operator that generates the shape from a string of UTF-8 characters, 
+	rendered according to the current font_face, font_size (font_matrix), and font_options. "
+
+	^ self primitive: self getHandle textPath: anUTF8EncodedString
 ]
 
 { #category : 'path segments visitor' }
