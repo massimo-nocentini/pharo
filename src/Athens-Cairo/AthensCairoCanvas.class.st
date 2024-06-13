@@ -1,5 +1,5 @@
 "
-my instances representing a low-level cairo context and mapped to cairo_t * C type
+My instances represent a low-level cairo context and mapped to [`cairo_t *`](https://www.cairographics.org/manual/cairo-cairo-t.html) C type.
 "
 Class {
 	#name : 'AthensCairoCanvas',
@@ -97,6 +97,13 @@ AthensCairoCanvas >> drawWithAlpha: alpha [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiGetScaledFont [
+
+	^ self ffiCall: #( CairoScaledFont cairo_get_scaled_font
+	     #( self ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> fill [
 	^ self ffiCall: #(void cairo_fill (self))
 ]
@@ -140,9 +147,12 @@ AthensCairoCanvas >> getHandle [
 
 { #category : 'private' }
 AthensCairoCanvas >> getScaledFont [
-	"Returns the current scaled font. This object is owned by cairo. To keep a reference to it, you must call cairo_scaled_font_reference().
- "
-	^ self ffiCall: #( CairoScaledFont cairo_get_scaled_font ( self ))
+	"Returns the current scaled font. This object is owned by cairo.
+	To keep a reference to it, you must call [`cairo_scaled_font_reference`](https://www.cairographics.org/manual/cairo-cairo-scaled-font-t.html#cairo-scaled-font-reference)."
+
+	^ self
+		  primitiveGetScaledFont: self getHandle
+		  scaledFontClass: CairoScaledFont
 ]
 
 { #category : 'accessing' }
@@ -305,6 +315,14 @@ AthensCairoCanvas >> primSetSourceR: red g: green b: blue a: alpha [
 			double green,
 			double blue,
 			double alpha) )
+]
+
+{ #category : 'private' }
+AthensCairoCanvas >> primitiveGetScaledFont: cairo_tHandle scaledFontClass: aClass [
+
+	<primitive: 'primitive_cairo_get_scaled_font' module:
+	'CairoGraphicsPlugin'>
+	^ self ffiGetScaledFont
 ]
 
 { #category : 'private' }
