@@ -104,6 +104,13 @@ AthensCairoCanvas >> ffiGetScaledFont [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
+
+	^ self ffiCall:
+		  #( void cairo_text_path #( self #, void #* anUTF8EncodedString ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> fill [
 	^ self ffiCall: #(void cairo_fill (self))
 ]
@@ -177,7 +184,7 @@ AthensCairoCanvas >> moveToX: x Y: y [
 	^ self primMoveToX: x asFloat Y: y asFloat
 ]
 
-{ #category : 'primitives' }
+{ #category : 'primitives - CairoGraphicsPlugin' }
 AthensCairoCanvas >> newPangoLayoutHandleOnAthensCairoCanvasHandle: cairoCanvas [
 
 	<primitive: 'primitive_pango_cairo_create_layout' module:
@@ -317,7 +324,14 @@ AthensCairoCanvas >> primSetSourceR: red g: green b: blue a: alpha [
 			double alpha) )
 ]
 
-{ #category : 'private' }
+{ #category : 'primitives - CairoGraphicsPlugin' }
+AthensCairoCanvas >> primitive: cairoHandle textPath: anUTF8EncodedString [
+
+	<primitive: 'primitive_cairo_text_path' module: 'CairoGraphicsPlugin'>
+	^ self ffiTextPath: anUTF8EncodedString
+]
+
+{ #category : 'primitives - CairoGraphicsPlugin' }
 AthensCairoCanvas >> primitiveGetScaledFont: cairo_tHandle scaledFontClass: aClass [
 
 	<primitive: 'primitive_cairo_get_scaled_font' module:
@@ -478,13 +492,6 @@ void                cairo_text_extents                  (cairo_t *cr,
                                                          cairo_text_extents_t *extents);
 "
 	^ self ffiCall: #( void cairo_text_extents (self, char *utf8String, cairo_text_extents_t *extentsObj) )
-]
-
-{ #category : 'drawing' }
-AthensCairoCanvas >> textPath: anUTF8EncodedString [
-	"A drawing operator that generates the shape from a string of UTF-8 characters, rendered according to the current font_face, font_size (font_matrix), and font_options. "
-
-	^ self ffiCall: #(void cairo_text_path (self, void* anUTF8EncodedString ))
 ]
 
 { #category : 'path segments visitor' }
