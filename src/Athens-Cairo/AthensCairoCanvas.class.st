@@ -64,7 +64,7 @@ AthensCairoCanvas >> clipBy: aRectangle during: aBlock [
 	]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'clipping' }
 AthensCairoCanvas >> clipRect [
 
 	^ currentClipRect ifNil: [
@@ -102,10 +102,15 @@ AthensCairoCanvas >> ffiFill [
 	^ self ffiCall: #( void cairo_fill #( self ) )
 ]
 
-{ #category : 'drawing' }
+{ #category : 'private' }
 AthensCairoCanvas >> ffiFillPreserve [
 
 	^ self ffiCall: #( #void #cairo_fill_preserve #( #self ) )
+]
+
+{ #category : 'private' }
+AthensCairoCanvas >> ffiGetCurrentPointX: x Y: y [
+	^ self ffiCall: #( void cairo_get_current_point (self, double * x, double * y))
 ]
 
 { #category : 'private' }
@@ -122,13 +127,13 @@ AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
 		  #( void cairo_text_path #( self #, void #* anUTF8EncodedString ) )
 ]
 
-{ #category : 'drawing' }
+{ #category : 'filling' }
 AthensCairoCanvas >> fill [
 
 	^ self primitiveFill: self getHandle
 ]
 
-{ #category : 'drawing' }
+{ #category : 'filling' }
 AthensCairoCanvas >> fillPreserve [
 
 	^ self primitiveFillPreserve: self getHandle
@@ -139,7 +144,7 @@ AthensCairoCanvas >> fillRule [
 	^ self ffiCall: #( cairo_fill_rule_t cairo_get_fill_rule ( self ) )
 ]
 
-{ #category : 'drawing' }
+{ #category : 'filling' }
 AthensCairoCanvas >> fillRuleEvenOdd [
 	self setFillRule: CAIRO_FILL_RULE_EVEN_ODD
 ]
@@ -149,15 +154,10 @@ AthensCairoCanvas >> fillRuleWinding [
 	self setFillRule: CAIRO_FILL_RULE_WINDING
 ]
 
-{ #category : 'private' }
+{ #category : 'accessing' }
 AthensCairoCanvas >> getCurrentPoint [
 
-	| x y |
-	"since we use pointers to floats we must create a copy of original values to not scratch them"
-	x := ByteArray new: 8.
-	y := ByteArray new: 8.
-	self primGetCurrentPointX: x Y: y.
-	^ (x doubleAt: 1)@ (y doubleAt: 1)
+	^ self primitiveGetCurrentPoint: self getHandle
 ]
 
 { #category : 'accessing' }
@@ -237,11 +237,6 @@ AthensCairoCanvas >> primDrawWithAlpha: alpha [
 	^ self ffiCall: #(
 		void cairo_paint_with_alpha ( self , double alpha)
 	)
-]
-
-{ #category : 'private' }
-AthensCairoCanvas >> primGetCurrentPointX: x Y: y [
-	^ self ffiCall: #( void cairo_get_current_point (self, double * x, double * y))
 ]
 
 { #category : 'private' }
@@ -366,6 +361,19 @@ AthensCairoCanvas >> primitiveFillPreserve: cairo_tHandle [
 	<primitive: 'primitive_cairo_fill_preserve' module:
 	'CairoGraphicsPlugin'>
 	^ self ffiFillPreserve
+]
+
+{ #category : 'primitives of CairoGraphicsPlugin' }
+AthensCairoCanvas >> primitiveGetCurrentPoint: cairo_tHandle [
+
+	<primitive: 'primitive_cairo_get_current_point' module:
+	'CairoGraphicsPlugin'>
+	| x y |
+	"since we use pointers to floats we must create a copy of original values to not scratch them"
+	x := ByteArray new: 8.
+	y := ByteArray new: 8.
+	self ffiGetCurrentPointX: x Y: y.
+	^ (x doubleAt: 1) @ (y doubleAt: 1)
 ]
 
 { #category : 'private' }
