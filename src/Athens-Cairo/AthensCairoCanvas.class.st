@@ -10,7 +10,8 @@ For the sake of clarity, some messages
 ```pharoeval
 {
 AthensCairoCanvas>>#getCurrentPoint.
-AthensCairoCanvas>>#newPath
+AthensCairoCanvas>>#newPath.
+AthensCairoCanvas>>#clip
 }
 ```
 
@@ -67,6 +68,13 @@ AthensCairoCanvas class >> on: cairoSurface [
 AthensCairoCanvas class >> primCreate: cairoSurface [
 	^ self ffiCall: #(
 		AthensCairoCanvas cairo_create (AthensCairoSurface cairoSurface) )
+]
+
+{ #category : 'clipping' }
+AthensCairoCanvas >> clip [
+
+	<primitive: 'primitive_cairo_clip' module: 'CairoGraphicsPlugin'>
+	^ self ffiClip
 ]
 
 { #category : 'clipping' }
@@ -272,13 +280,6 @@ AthensCairoCanvas >> pathTransform [
 ]
 
 { #category : 'private' }
-AthensCairoCanvas >> primClip [
-
-	<primitive: 'primitive_cairo_clip' module: 'CairoGraphicsPlugin'>
-	^ self ffiClip
-]
-
-{ #category : 'private' }
 AthensCairoCanvas >> primDrawWithAlpha: alpha [
 	^ self ffiCall: #(
 		void cairo_paint_with_alpha ( self , double alpha)
@@ -429,7 +430,7 @@ AthensCairoCanvas >> pushClipRect: aRectangle [
 		y: aRectangle top
 		width: aRectangle width
 		height: aRectangle height;
-		primClip
+		clip
 ]
 
 { #category : 'private' }
