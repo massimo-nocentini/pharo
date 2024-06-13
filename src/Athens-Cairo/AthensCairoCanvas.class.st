@@ -75,7 +75,7 @@ AthensCairoCanvas >> clipRect [
 			                     ifNil: [ 0 @ 0 extent: self surface extent ]  ]
 ]
 
-{ #category : 'private' }
+{ #category : 'methods without senders' }
 AthensCairoCanvas >> copyPage [
 	self ffiCall: #( void cairo_copy_page (self) )
 ]
@@ -91,9 +91,15 @@ AthensCairoCanvas >> draw [
 	^ shape paintFillsUsing: paint on: self
 ]
 
-{ #category : 'drawing' }
+{ #category : 'methods without senders' }
 AthensCairoCanvas >> drawWithAlpha: alpha [
 	^ self primDrawWithAlpha: alpha asFloat
+]
+
+{ #category : 'private' }
+AthensCairoCanvas >> ffiFill [
+
+	^ self ffiCall: #( void cairo_fill #( self ) )
 ]
 
 { #category : 'private' }
@@ -112,7 +118,9 @@ AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
 
 { #category : 'private' }
 AthensCairoCanvas >> fill [
-	^ self ffiCall: #(void cairo_fill (self))
+	"Binds the C function [`cairo_fill`](https://www.cairographics.org/manual/cairo-cairo-t.html#cairo-fill)"
+
+	^ self primitiveFill: self getHandle
 ]
 
 { #category : 'drawing' }
@@ -184,7 +192,7 @@ AthensCairoCanvas >> moveToX: x Y: y [
 	^ self primMoveToX: x asFloat Y: y asFloat
 ]
 
-{ #category : 'primitives - CairoGraphicsPlugin' }
+{ #category : 'primitives of CairoGraphicsPlugin' }
 AthensCairoCanvas >> newPangoLayoutHandleOnAthensCairoCanvasHandle: cairoCanvas [
 
 	<primitive: 'primitive_pango_cairo_create_layout' module:
@@ -324,7 +332,7 @@ AthensCairoCanvas >> primSetSourceR: red g: green b: blue a: alpha [
 			double alpha) )
 ]
 
-{ #category : 'primitives - CairoGraphicsPlugin' }
+{ #category : 'primitives of CairoGraphicsPlugin' }
 AthensCairoCanvas >> primitive: cairo_tHandle getScaledFont: aClass [
 
 	<primitive: 'primitive_cairo_get_scaled_font' module:
@@ -332,11 +340,18 @@ AthensCairoCanvas >> primitive: cairo_tHandle getScaledFont: aClass [
 	^ self ffiGetScaledFont
 ]
 
-{ #category : 'primitives - CairoGraphicsPlugin' }
+{ #category : 'primitives of CairoGraphicsPlugin' }
 AthensCairoCanvas >> primitive: cairo_tHandle textPath: anUTF8EncodedString [
 
 	<primitive: 'primitive_cairo_text_path' module: 'CairoGraphicsPlugin'>
 	^ self ffiTextPath: anUTF8EncodedString
+]
+
+{ #category : 'primitives of CairoGraphicsPlugin' }
+AthensCairoCanvas >> primitiveFill: cairo_tHandle [
+
+	<primitive: 'primitive_cairo_fill' module: 'CairoGraphicsPlugin'>
+	^ self ffiFill
 ]
 
 { #category : 'private' }
