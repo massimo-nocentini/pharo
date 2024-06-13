@@ -1,5 +1,30 @@
 "
+# Intro
 My instances represent a low-level cairo context and mapped to [`cairo_t *`](https://www.cairographics.org/manual/cairo-cairo-t.html) C type.
+
+# Slots
+{{<span size=""161.8%"" foreground=""red"">}}_The order of existing slots has to be maintained and **not** modified._{{</span>}}
+
+For the sake of clarity, some messages
+
+```pharoeval
+{
+AthensCairoCanvas>>#getCurrentPoint
+}
+```
+
+assume that the `handle` slot
+
+```pharoeval
+slot := AthensCairoCanvas slotNamed: #handle.
+slot name
+```
+
+remains at a fixed position.
+
+```pharoeval
+slot index
+```
 "
 Class {
 	#name : 'AthensCairoCanvas',
@@ -157,7 +182,14 @@ AthensCairoCanvas >> fillRuleWinding [
 { #category : 'accessing' }
 AthensCairoCanvas >> getCurrentPoint [
 
-	^ self primitiveGetCurrentPoint: self getHandle
+	<primitive: 'primitive_cairo_get_current_point' module:
+	'CairoGraphicsPlugin'>
+	| x y |
+	"since we use pointers to floats we must create a copy of original values to not scratch them"
+	x := ByteArray new: 8.
+	y := ByteArray new: 8.
+	self ffiGetCurrentPointX: x Y: y.
+	^ (x doubleAt: 1) @ (y doubleAt: 1)
 ]
 
 { #category : 'accessing' }
@@ -174,11 +206,6 @@ AthensCairoCanvas >> getScaledFont [
 	^ self
 		  primitive: self getHandle
 		  getScaledFont: CairoScaledFont
-]
-
-{ #category : 'accessing' }
-AthensCairoCanvas >> handle [
-	^ handle value
 ]
 
 { #category : 'initialize-release' }
