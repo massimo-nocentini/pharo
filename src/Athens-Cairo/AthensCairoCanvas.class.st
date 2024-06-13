@@ -12,7 +12,8 @@ For the sake of clarity, some messages
 AthensCairoCanvas>>#getCurrentPoint.
 AthensCairoCanvas>>#newPath.
 AthensCairoCanvas>>#clip.
-AthensCairoCanvas>>#primMoveToX:Y:
+AthensCairoCanvas>>#primMoveToX:Y:.
+AthensCairoCanvas>>#primRectangleX:y:width:height:
 }
 ```
 
@@ -177,6 +178,14 @@ AthensCairoCanvas >> ffiNewPath [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiRectangleX: x y: y width: aWidth height: aHeight [
+
+	^ self ffiCall:
+		  #( void cairo_rectangle #( self #, double x #, double y #, double
+		        aWidth #, double aHeight ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
 
 	^ self ffiCall:
@@ -315,9 +324,13 @@ AthensCairoCanvas >> primPaint [
 
 { #category : 'private' }
 AthensCairoCanvas >> primRectangleX: x y: y width: aWidth height: aHeight [
-	^ self ffiCall: #(void cairo_rectangle (self,
-		 double x, double y,
-		 double aWidth, double aHeight) )
+
+	<primitive: 'primitive_cairo_rectangle' module: 'CairoGraphicsPlugin'>
+	^ self
+		  ffiRectangleX: x
+		  y: y
+		  width: aWidth
+		  height: aHeight
 ]
 
 { #category : 'private' }
