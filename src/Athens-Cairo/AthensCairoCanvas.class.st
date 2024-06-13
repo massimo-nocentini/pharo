@@ -125,6 +125,12 @@ AthensCairoCanvas >> drawWithAlpha: alpha [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiClip [
+
+	^ self ffiCall: #( void cairo_clip #( self ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> ffiFill [
 
 	^ self ffiCall: #( void cairo_fill #( self ) )
@@ -267,7 +273,9 @@ AthensCairoCanvas >> pathTransform [
 
 { #category : 'private' }
 AthensCairoCanvas >> primClip [
-	^ self ffiCall: #(void cairo_clip (self))
+
+	<primitive: 'primitive_cairo_clip' module: 'CairoGraphicsPlugin'>
+	^ self ffiClip
 ]
 
 { #category : 'private' }
