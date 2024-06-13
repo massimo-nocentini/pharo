@@ -11,7 +11,8 @@ For the sake of clarity, some messages
 {
 AthensCairoCanvas>>#getCurrentPoint.
 AthensCairoCanvas>>#newPath.
-AthensCairoCanvas>>#clip
+AthensCairoCanvas>>#clip.
+AthensCairoCanvas>>#primMoveToX:Y:
 }
 ```
 
@@ -163,6 +164,13 @@ AthensCairoCanvas >> ffiGetScaledFont [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiMoveToX: x Y: y [
+
+	^ self ffiCall:
+		  #( void cairo_move_to #( self #, double x #, double y ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> ffiNewPath [
 
 	^ self ffiCall: #( void cairo_new_path #( self ) )
@@ -293,8 +301,10 @@ AthensCairoCanvas >> primGetSource [
 
 { #category : 'private' }
 AthensCairoCanvas >> primMoveToX: x Y: y [
-	" move command always starts a new contour "
-	^ self ffiCall: #(void cairo_move_to (self, double x, double y ) )
+
+	<primitive: 'primitive_cairo_get_current_point' module:
+	'CairoGraphicsPlugin'>
+	^ self ffiMoveToX: x Y: y
 ]
 
 { #category : 'private' }
@@ -408,19 +418,6 @@ AthensCairoCanvas >> primitiveFillPreserve: cairo_tHandle [
 	<primitive: 'primitive_cairo_fill_preserve' module:
 	'CairoGraphicsPlugin'>
 	^ self ffiFillPreserve
-]
-
-{ #category : 'primitives of CairoGraphicsPlugin' }
-AthensCairoCanvas >> primitiveGetCurrentPoint: cairo_tHandle [
-
-	<primitive: 'primitive_cairo_get_current_point' module:
-	'CairoGraphicsPlugin'>
-	| x y |
-	"since we use pointers to floats we must create a copy of original values to not scratch them"
-	x := ByteArray new: 8.
-	y := ByteArray new: 8.
-	self ffiGetCurrentPointX: x Y: y.
-	^ (x doubleAt: 1) @ (y doubleAt: 1)
 ]
 
 { #category : 'private' }
