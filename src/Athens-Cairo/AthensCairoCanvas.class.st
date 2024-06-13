@@ -9,7 +9,8 @@ For the sake of clarity, some messages
 
 ```pharoeval
 {
-AthensCairoCanvas>>#getCurrentPoint
+AthensCairoCanvas>>#getCurrentPoint.
+AthensCairoCanvas>>#newPath
 }
 ```
 
@@ -148,6 +149,12 @@ AthensCairoCanvas >> ffiGetScaledFont [
 ]
 
 { #category : 'private' }
+AthensCairoCanvas >> ffiNewPath [
+
+	^ self ffiCall: #( void cairo_new_path #( self ) )
+]
+
+{ #category : 'private' }
 AthensCairoCanvas >> ffiTextPath: anUTF8EncodedString [
 
 	^ self ffiCall:
@@ -237,7 +244,9 @@ AthensCairoCanvas >> newPangoLayoutHandleOnAthensCairoCanvasHandle: cairoCanvas 
 
 { #category : 'private' }
 AthensCairoCanvas >> newPath [
-	^ self ffiCall: #( void cairo_new_path ( self ) )
+
+	<primitive: 'primitive_cairo_new_path' module: 'CairoGraphicsPlugin'>
+	^ self ffiNewPath
 ]
 
 { #category : 'accessing' }
